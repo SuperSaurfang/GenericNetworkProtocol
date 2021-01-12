@@ -47,9 +47,9 @@ namespace ComProtocol
             Array.Copy(data, 2, lenghtArray, 0, 4);
             int length = BitConverter.ToInt32(lenghtArray, 0);
 
-            byte[] sizeArrray = new byte[4];
-            Array.Copy(data, 6, sizeArrray, 0, 4);
-            int size = BitConverter.ToInt32(sizeArrray, 0);
+            byte[] headerLengthArrray = new byte[4];
+            Array.Copy(data, 6, headerLengthArrray, 0, 4);
+            int size = BitConverter.ToInt32(headerLengthArrray, 0);
 
             int hasPayloadValue = data[10];
             var hasPayload = Convert.ToBoolean(hasPayloadValue);
@@ -76,8 +76,8 @@ namespace ComProtocol
             data.AddRange(length);
 
             //same as length
-            var size = BitConverter.GetBytes(HeaderLength);
-            data.AddRange(size);
+            var headerLength = BitConverter.GetBytes(HeaderLength);
+            data.AddRange(headerLength);
 
             data.Add(Convert.ToByte(HasPayload));
             

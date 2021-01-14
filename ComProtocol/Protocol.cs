@@ -6,15 +6,15 @@ namespace ComProtocol
 {
     public class Protocol<T> where T : struct
     {
-        public Header<T> Header { get; }
-        public PayloadBase Payload { get; }
+        public Header<T> Header { get; private set; }
+        public PayloadBase Payload { get; private set; }
 
         private Protocol(Header<T> header, PayloadBase payload = null) 
         {
             Header = header;
             if(payload != null) 
             {
-                Payload = payload;
+               Payload = payload;
             }
         }
 
@@ -38,6 +38,10 @@ namespace ComProtocol
         /// <returns>the protocol</returns>
         public static Protocol<T> Parse(byte[] data, PayloadBase payload = null)
         {
+            if (data.Length < Header<T>.HEADER_LENGTH)
+            {
+                throw new ArgumentException($"Unable to parse data, data length is to short: {data.Length}");
+            }
             var headerBytes = new List<byte>();
             var payloadBytes = new List<byte>();
             var index = 0;
@@ -45,33 +49,41 @@ namespace ComProtocol
             //parse header
             for (; index < data.Length; index++)
             {
-                if (index == 11)
+                if (index == Header<T>.HEADER_LENGTH)
                 {
                     break;
                 }
                 headerBytes.Add(data[index]);
             }
-            var header = Header<T>.Parse(headerBytes.ToArray());
+            Header<T> header;
+            try
+            {
+                header = Header<T>.TryParse(headerBytes.ToArray());
+            }
+            catch (ProtocolHeaderParseException ex)
+            {
+                throw new ProtocolParseException("Unable to parse header", ex);
+            }
 
             //simple length and size check to identify corrupted or incorrect packets
-            if(header.Length != data.Length)
-            {
-                throw new ProtocolLengthExecption(header.Length, data.Length);
-            }
-            var actualHeaderLength = data.Length - (header.Length - header.HeaderLength);
-            if(header.HasPayload && header.HeaderLength != actualHeaderLength)
-            {
-                throw new ProtocolHeaderLengthException(header.HeaderLength, actualHeaderLength);
-            }
+            ValidateLength(data, header);
 
-            //check if packet has payload
+            //check if packet has payload and parse it
             if (header.HasPayload && payload != null)
             {
                 for (; index < data.Length; index++)
                 {
                     payloadBytes.Add(data[index]);
                 }
-                payload.Parse(payloadBytes.ToArray());
+
+                try
+                {
+                    payload.Parse(payloadBytes.ToArray());
+                }
+                catch (Exception ex)
+                {
+                    throw new ProtocolParseException("Unable to parse payload", ex);
+                }
 
                 return new Protocol<T>(header, payload);
             }
@@ -80,29 +92,25 @@ namespace ComProtocol
             return new Protocol<T>(header);
         }
 
-        private void UpdateLength(ref Protocol<T> protocol, int length)
+        private static void ValidateLength(byte[] data, Header<T> header)
         {
-            var newLength = protocol.Header.Length + length;
-            if (protocol.Payload != null)
+            if (header.Length != data.Length)
             {
-                var header = new Header<T>(protocol.Header.Type, protocol.Header.State, newLength, protocol.Header.HeaderLength, true);
-                var payload = protocol.Payload.Parse(protocol.Payload.GetBytes());
-                protocol = new Protocol<T>(header, payload);
+                throw new ProtocolLengthException(header.Length, data.Length);
             }
-            else
+            var actualHeaderLength = data.Length - (header.Length - header.HeaderLength);
+            if (header.HasPayload && header.HeaderLength != actualHeaderLength)
             {
-                var header = new Header<T>(protocol.Header.Type, protocol.Header.State, newLength, protocol.Header.HeaderLength);
-                protocol = new Protocol<T>(header);
+                throw new ProtocolHeaderLengthException(header.HeaderLength, actualHeaderLength);
             }
         }
 
-        public void AddPayLoad(ref Protocol<T> protocol, PayloadBase payload)
+        public void AddPayLoad(PayloadBase payload)
         {
             var bytes = payload.GetBytes();
-            UpdateLength(ref protocol, bytes.Length);
-            var header = new Header<T>(protocol.Header.Type, protocol.Header.State, protocol.Header.Length, protocol.Header.HeaderLength, true);
-            var newPayload = payload.Parse(bytes);
-            protocol = new Protocol<T>(header, newPayload);
+            Header.UpdateLength(bytes.Length);
+            Header.SetHasPayload();
+            Payload = payload;
         }
 
         /// <summary>

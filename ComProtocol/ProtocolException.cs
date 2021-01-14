@@ -5,23 +5,23 @@ using System.Text;
 
 namespace ComProtocol
 {
-    class ProtocolExecption : Exception 
+    class ProtocolException : Exception 
     {
-        public ProtocolExecption()
+        public ProtocolException()
         {
         }
 
-        public ProtocolExecption(string message) 
+        public ProtocolException(string message) 
             : base(message)
         {
         }
 
-        public ProtocolExecption(string message, Exception innerException)
+        public ProtocolException(string message, Exception innerException)
             : base(message, innerException)
         {
         }
 
-        public ProtocolExecption(int exceptedLength, int actualLength)
+        public ProtocolException(int exceptedLength, int actualLength)
         {
             ExceptedLength = exceptedLength;
             ActualLength = actualLength;
@@ -30,17 +30,16 @@ namespace ComProtocol
         public int ExceptedLength { get; }
         public int ActualLength { get; }
     }
-    class ProtocolLengthExecption : ProtocolExecption
+    class ProtocolLengthException : ProtocolException
     {
-        public ProtocolLengthExecption(int exceptedLength, int actualLength) 
+        public ProtocolLengthException(int exceptedLength, int actualLength) 
             : base(exceptedLength, actualLength)
         {
         }
 
         public override string Message => $"Protocol length difference detected, packet maybe corrupted. excepted length: {ExceptedLength}, actual length: {ActualLength}";
     }
-
-    class ProtocolHeaderLengthException : ProtocolExecption
+    class ProtocolHeaderLengthException : ProtocolException
     {
         public ProtocolHeaderLengthException(int exceptedLength, int actualLength) 
             : base(exceptedLength, actualLength)
@@ -49,4 +48,27 @@ namespace ComProtocol
 
         public override string Message => $"Protocol header length difference detected, packet maybe corrupted. excepted length: {ExceptedLength}, actual length: {ActualLength}";
     }
+    class ProtocolHeaderParseException : Exception
+    {
+        public ProtocolHeaderParseException()
+        {
+        }
+
+        public ProtocolHeaderParseException(string message, Exception innerException) 
+            : base(message, innerException)
+        {
+        }
+    }
+
+    class ProtocolParseException : Exception
+    {
+        public ProtocolParseException()
+        {
+        }
+
+        public ProtocolParseException(string message, Exception innerException) : base(message, innerException)
+        {
+        }
+    }
 }
+

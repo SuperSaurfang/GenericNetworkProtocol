@@ -48,9 +48,19 @@ namespace ComProtocol
             try
             {
                 int typeValue = data[TYPE_POSITION];
+                var isDefined = Enum.IsDefined(typeof(M), typeValue);
+                if(!isDefined) 
+                {
+                    throw new UndefinedEnumValueException(typeValue);
+                }
                 Enum.TryParse(typeValue.ToString(), out M type);
 
                 int stateValue = data[STATE_POSITION];
+                isDefined = Enum.IsDefined(typeof(ComState), stateValue);
+                if(!isDefined)
+                {
+                    throw new UndefinedEnumValueException(stateValue);
+                }
                 Enum.TryParse(stateValue.ToString(), out ComState state);
 
                 byte[] lenghtArray = new byte[INT_SIZE];

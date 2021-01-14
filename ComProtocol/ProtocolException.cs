@@ -70,5 +70,17 @@ namespace ComProtocol
         {
         }
     }
+
+    class UndefinedEnumValueException : Exception
+    {
+        public UndefinedEnumValueException(int value)
+        {
+            Value = value;
+        }
+
+        public int Value { get; }
+
+        public override string Message => $"Value not defined in Enum: {Value}";
+    }
 }
 

@@ -56,14 +56,14 @@ var myPayload = new MyPayload
 {
     Message = "Hello World!"
 };
-protocol.AddPayLoad(ref protocol, myPayload);
+protocol.AddPayLoad(myPayload);
 ```
 
 The last thing do to is:
 ```csharp
 var data = protocol.GetBytes();
 ```
-The data can be passed into the network stream - tcp or udp or any other protocol
+The data can be passed into a stream e.g tcp or udp network stream or any other stream
 
 If you get data from the network stream ou can parse the data with the following method:
 ```csharp

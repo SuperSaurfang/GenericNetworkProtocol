@@ -17,7 +17,7 @@ namespace GenericNetworlProtocol.Example
             {
                 Message = "Hello World!"
             };
-            protocol.AddPayLoad(ref protocol, myPayload);
+            protocol.AddPayLoad(myPayload);
 
             //now call GetBytes to the data as a byte array, that you can send via tcp/ip or udp over the network
             var data = protocol.GetBytes();
